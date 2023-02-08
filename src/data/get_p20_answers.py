@@ -23,49 +23,27 @@ def batch_get_answers(url, retries=3):
         try:
             r = requests.get(url)
             answers = r.json()
-            prev = r.json()
-            page = 1
-
-            while 'odata.nextLink' in prev:
-
-                r = requests.get(prev['odata.nextLink'])
-                answers['value'] += r.json()['value']
-                page += 1
-                prev = r.json()
 
             #check if there are multiple answers to a question
-            if len(answers['value']) > 1:
+            if len(answers) > 1:
                 #if there are multiple answers, we want the final answer
                 #final answers have kategoriid = 22
                 final_answer = [answer for answer in answers['value'] if answer['kategoriid'] == 22]
+                final_answer = final_answer[0]['id']
                 return final_answer
+            
+            elif len(answers) == 1:
+                #if there is only one answer, we want that one
+                return answers['value'][0]['id']
+            
+            else:
+                #if there are no answers, we want to return None
+                return None
 
-            return answers
         except:
             if i == retries - 1:
                 return None
 
-
-'''
-This script does the following:
-1) Takes the 'answer_id' from the answers csv file and uses it to scrape the links from ODA
-2) It then adds the links to the answers csv file and saves it to a new csv file
-'''
-
-def get_filurls(answer_id, retries=3):
-    filurls = []
-    for i in range(retries):
-        try:
-            r = requests.get(links_baseurl + '(' + str(answer_id) + ')')
-            documents = r.json()['value']
-            for document in documents:
-                if 'filurl' in document:
-                    filurls.append(document['filurl'])
-            if filurls:
-                return filurls
-        except:
-            if i == retries - 1:
-                return None
 
 
 if __name__ == '__main__':
@@ -85,20 +63,43 @@ if __name__ == '__main__':
     questions.to_csv('data/raw/questions_with_answers.csv', index=False)
 
 
-    print("Getting links from ODA")
-    links_baseurl = 'https://oda.ft.dk/api/Dokument'
+    # print("Getting links from ODA")
+    # links_baseurl = 'https://oda.ft.dk/api/Dokument'
 
-    answer_ids = questions['answer_id'].tolist()
+    # answer_ids = questions['answer_id'].tolist()
 
-    filurls = []
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(get_filurls, answer_id) for answer_id in answer_ids]
-        for future in tqdm(futures):
-            try:
-                filurl = future.result()
-                if filurl:
-                    filurls.append(filurl)
-            except Exception as exc:
-                print(f'Answer_id {answer_id} generated an exception: {exc}')
-    questions['filurl'] = filurls
-    questions.to_csv('data/raw/questions_with_filurls.csv', index=False)
+    # filurls = []
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     futures = [executor.submit(get_filurls, answer_id) for answer_id in answer_ids]
+    #     for future in tqdm(futures):
+    #         try:
+    #             filurl = future.result()
+    #             if filurl:
+    #                 filurls.append(filurl)
+    #         except Exception as exc:
+    #             print(f'Answer_id {answer_id} generated an exception: {exc}')
+    # questions['filurl'] = filurls
+    # questions.to_csv('data/raw/questions_with_filurls.csv', index=False)
+
+    
+    # #Trying to download pdfs
+    # import ssl
+    # import wget
+    # ssl._create_default_https_context = ssl._create_unverified_context
+    # bad_links = []
+
+    # def download_pdf(url, filename):
+    #     try: 
+    #         wget.download(url, filename)
+    #     except:
+    #         print(f'Could not download {filename}')
+    #         bad_links.append(filename)
+    # links = questions['filurl'].tolist()
+    # filenames = questions['answer_id'].tolist()
+
+
+    # for link, filename in tqdm(zip(links, filenames)):
+    #     if link:
+    #         path = 'data/interim/' + str(filename) + '.pdf'
+    #         download_pdf(link, filename)
+    
