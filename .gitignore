@@ -91,3 +91,4 @@ target/
 *.pdf
 *.pickle
 src/deployment/api_secrets.py
+*.png
