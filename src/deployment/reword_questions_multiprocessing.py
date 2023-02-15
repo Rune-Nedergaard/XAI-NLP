@@ -1,19 +1,16 @@
 import openai
-
 from api_secrets import API_KEY
-
-import openai
 import os
 import re
 import pandas as pd
 from pathlib import Path
 import glob
 from tqdm import tqdm
-
+import multiprocessing
 
 
 openai.api_key = API_KEY
-
+failed_files = []
 
 # prompt_template = '''Transform questions into simple language that a typical person might use when searching for information online. The revised question should not be written as if it is addressed to the minister.
 
@@ -32,15 +29,23 @@ prompt_template = '''Transform the question into simple language that a typical 
 Original question: [INSERT EXAMPLE HERE]
 Revised question:'''
 
-failed_files = []
+skipped_files = 0
+processed_files = 0
 
-for filename in tqdm(os.listdir('data/translated_questions_correct'),total=len(os.listdir('data/translated_questions_correct'))):
+def process_file(filename):
     if not filename.endswith('.txt'):
         print(f"Skipping file {filename} (not a .txt file)")
-        continue
-
-    with open(os.path.join('data/translated_questions_correct', filename)) as f:
-        example = f.read()
+        return
+    
+    if os.path.exists(os.path.join('data/questions_rephrased', filename)):
+        print(f"Skipping file {filename} (file already exists in questions_rephrased folder)")
+        return
+    try:
+        with open(os.path.join('data/translated_questions_correct', filename)) as f:
+            example = f.read()
+    except UnicodeDecodeError:
+        print(f"Skipping file {filename} (UnicodeDecodeError)")
+        return
 
     retry = 0
     while retry < 10:
@@ -54,12 +59,19 @@ for filename in tqdm(os.listdir('data/translated_questions_correct'),total=len(o
             break
         except Exception as e:
             retry += 1
-            if retry == 3:
-                failed_files.append(filename)
-                print(f"Request for file {filename} failed after 3 retries: {e}")
+            if retry == 10:
+                print(f"Request for file {filename} failed after 10 retries: {e}")
                 break
             else:
-                print(f"Request for file {filename} failed, retrying... ({retry}/3)")
+                print(f"Request for file {filename} failed, retrying... ({retry}/10)")
 
-if failed_files:
-    print(f"The following files failed: {failed_files}")
+
+if __name__ == '__main__':
+    num_processes = multiprocessing.cpu_count()
+    pool = multiprocessing.Pool(num_processes)
+    filenames = os.listdir('data/translated_questions_correct')
+    args = [filename for filename in filenames]
+    results = pool.map(process_file, args)
+    pool.close()
+    pool.join()
+
