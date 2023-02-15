@@ -48,6 +48,7 @@ def find_nearest_questions(user_question, encoded_corpus, top_k=10):
     embeddings = []
     text = []
     basenames = []
+    answer_ids = []
     for i in range(len(data)):
         embeddings.append(data[i]['embedding'])
         text.append(data[i]['text'])
@@ -56,6 +57,11 @@ def find_nearest_questions(user_question, encoded_corpus, top_k=10):
             basenames.append(os.path.splitext(os.path.basename(filename))[0])
         else:
             basenames.append(str(i))
+        answer_id = data[i].get('answer_id')
+        if answer_id:
+            answer_ids.append(answer_id)
+        else:
+            answer_ids.append(None)
 
     # Encode the new question
     encoded_question = model.encode([user_question])[0]
@@ -66,12 +72,13 @@ def find_nearest_questions(user_question, encoded_corpus, top_k=10):
     # Sort the cosine similarities in descending order
     nearest_questions_indices = cosine_similarities.argsort()[::-1][:top_k]
 
-    # Retrieve the corresponding text, basename, and index for the nearest questions
+    # Retrieve the corresponding text, basename, and answer_id for the nearest questions
     nearest_questions = []
     for i in nearest_questions_indices:
-        nearest_questions.append((text[i], basenames[i], i))
+        nearest_questions.append((text[i], basenames[i], answer_ids[i]))
 
     return nearest_questions
+
 
 
 
@@ -137,7 +144,7 @@ def get_facts(nearest_questions, idx):
 
         # Combine the facts from all chunks into a single string
         facts = "\n".join(fact_list)
-
+        """THE ANSWERS ARE WRITTEN TWICE FIX THIS"""
         # Saving the facts
         with open(f"data/answer_facts/{answer_id}.txt", "w") as f:
             f.write(facts)
@@ -157,7 +164,7 @@ def generate_answer(user_question, nearest_questions):
 
 
     #Get a single string from facts list using \n as separator
-    facts_string = "\n".join(facts)
+    #facts_string = "\n".join(facts)
 
     #Generating the answer
     prompt_template = '''You are a chatbot designed to answer citizens' questions regarding politics.
