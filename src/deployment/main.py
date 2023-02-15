@@ -160,17 +160,21 @@ def generate_answer(user_question, nearest_questions):
     facts_string = "\n".join(facts)
 
     #Generating the answer
-    prompt_template = '''Citizen question: "[QUESTION]"
-    Carefully review the set of facts provided  andd consider how they might help answer the citizen question.
-    If the facts provide some clues, use them to provide your answer. Reference relevant sources of evidence to support your argument, making note of relevant dates. If they don't, explain why not and suggest what additional information or data would be needed to adequately address the question.
-    
+    prompt_template = '''You are a chatbot designed to answer citizens' questions regarding politics.
+    You will be provided a set of facts, some of which may be relevant to answering the question.
+    Your answer should strive to be nuanced and comprehensive, weighing both sides of the issue if applicable.
+    Carefully review the set of facts provided and consider which of them can help you answer the citizen's question.
+    If the facts provide some clues, use them to provide your answer. Reference relevant sources of evidence to support your argument, making note of relevant dates. 
+    If the facts don't provide enough information, explain why not and suggest what additional information or data would be needed to adequately address the question.
+
     Facts: 
     """
     [CONTEXT]
     """
+    Citizen's question: "[QUESTION]"
     Answer:'''
     prompt = prompt_template.replace("[CONTEXT]", "\n".join(facts)).replace("[QUESTION]", user_question)
-    response = openai.Completion.create(engine = "text-davinci-003", prompt = prompt, max_tokens=2000)
+    response = openai.Completion.create(engine = "text-davinci-003", prompt = prompt, max_tokens=2000, temperature=0.2)
     complete_text = prompt+response["choices"][0]["text"]
     return response["choices"][0]["text"], complete_text
     
