@@ -99,10 +99,10 @@ def get_facts(nearest_questions, idx):
         #load the answer
         print(f"Answer {answer_id} not processed, extracting facts")
         try:
-            with open(f"data/translated/{answer_id}.txt", "r") as f:
+            with open(f"data/translated/{str(answer_id)}.txt", "r") as f:
                 answer_text = f.read()
         except:
-            print(f"No answer found for id {answer_id} found")
+            print(f"No answer found for §20 question with id {answer_id}")
             answer_text = ""
 
         # Check if the text length is more than 2000 tokens
@@ -211,9 +211,9 @@ if __name__ == '__main__':
     #save the response and complete text
     try:
         with open("data/generated_answers/response_text/response.txt", "w") as f:
-            f.write(response)
+            f.write(user_question)
         with open("data/generated_answers/complete_text/complete_text.txt", "w") as f:
-            f.write(complete_text)
+            f.write(user_question)
     except:
         print("Error saving response and complete text")
     
