@@ -89,7 +89,7 @@ def get_facts(nearest_questions, idx):
     if it has, it returns these, otherwise it extracts the facts from the answer and saves them in a txt file
     """
 
-    prompt_template ="""Provide a comprehensive summary of the text below using bullet points and a high level of technical detail. You may paraphrase the original wording to improve the summary's comprehensibility, while ensuring that the important content and actors involved are accurately represented
+    prompt_template ="""Summarize the answer in the text below into 5-10 bullet points such that a high level of technical detail is maintained. You may paraphrase the original wording to improve the summary's comprehensibility, while ensuring that the important content and actors involved are accurately represented.
     Text:
     ###
     [TEXT]
@@ -106,7 +106,7 @@ def get_facts(nearest_questions, idx):
         #load the answer
         print(f"Answer {answer_id} not processed, extracting facts")
         try:
-            with open(f"data/translated/{str(answer_id)}.txt", "r") as f:
+            with open(f"data/translated_answers_correct/{str(answer_id)}.txt", "r") as f:
                 answer_text = f.read()
         except:
             print(f"No answer found for §20 question with id {answer_id}")
@@ -165,16 +165,17 @@ def generate_answer(user_question, nearest_questions):
 
     #Get a single string from facts list using \n as separator
     #facts_string = "\n".join(facts)
+    #    You will be provided a set of facts, some of which may be relevant to answering the question.
+    #    Your answer should strive to be nuanced and comprehensive, weighing both sides of the issue if applicable.
+
 
     #Generating the answer
-    prompt_template = '''You are a chatbot designed to answer citizens' questions regarding politics.
-    You will be provided a set of facts, some of which may be relevant to answering the question.
-    Your answer should strive to be nuanced and comprehensive, weighing both sides of the issue if applicable.
+    prompt_template = '''You are a chatbot designed to answer citizens' questions regarding politics based on provided facts.
     Carefully review the set of facts provided and consider which of them can help you answer the citizen's question.
     If the facts provide some clues, use them to provide your answer. Reference relevant sources of evidence to support your argument, making note of relevant dates. 
     If the facts don't provide enough information, explain why not and suggest what additional information or data would be needed to adequately address the question.
 
-    Facts: 
+    Provided facts: 
     """
     [CONTEXT]
     """
